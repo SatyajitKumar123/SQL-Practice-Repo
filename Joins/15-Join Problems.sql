@@ -164,8 +164,65 @@ ORDER BY total_cost DESC
 ;
 
 
+-- Sample Datasets I used.
+-- Let's create three common, related tables found in almost every business: employees, departments, and projects.
 
+CREATE TABLE departments (
+    department_id SERIAL PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL
+);
 
+INSERT INTO departments (department_name) VALUES
+('Engineering'),
+('Sales'),
+('Marketing'),
+('HR');
+
+CREATE TABLE employees (
+    employee_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100),
+    salary NUMERIC(10, 2),
+    department_id INTEGER REFERENCES departments(department_id),
+    manager_id INTEGER REFERENCES employees(employee_id) -- Self-referencing key for hierarchy
+);
+
+INSERT INTO employees (first_name, last_name, email, salary, department_id, manager_id) VALUES
+('Alice', 'Smith', 'alice.smith@company.com', 90000, 1, NULL), -- Engineering, no manager (head of dept)
+('Bob', 'Johnson', 'bob.johnson@company.com', 80000, 1, 1),
+('Charlie', 'Williams', 'charlie.williams@company.com', 70000, 2, NULL), -- Sales, no manager
+('David', 'Brown', 'david.brown@company.com', 65000, 2, 3),
+('Eva', 'Jones', 'eva.jones@company.com', 75000, 3, NULL), -- Marketing, no manager
+('Frank', 'Garcia', 'frank.garcia@company.com', 60000, 1, 2),
+('Grace', 'Miller', 'grace.miller@company.com', 95000, 4, NULL); -- HR, no manager
+
+CREATE TABLE projects (
+    project_id SERIAL PRIMARY KEY,
+    project_name VARCHAR(100) NOT NULL,
+    budget NUMERIC(12, 2),
+    start_date DATE,
+    end_date DATE
+);
+
+CREATE TABLE employee_projects ( -- Junction table for Many-to-Many relationship
+    employee_id INTEGER REFERENCES employees(employee_id),
+    project_id INTEGER REFERENCES projects(project_id),
+    hours_logged NUMERIC(5, 2) DEFAULT 0,
+    PRIMARY KEY (employee_id, project_id)
+);
+
+INSERT INTO projects (project_name, budget, start_date, end_date) VALUES
+('Build New API', 50000, '2023-01-15', '2023-06-30'),
+('Website Redesign', 75000, '2023-02-01', NULL), -- Ongoing project
+('Q3 Sales Campaign', 25000, '2023-07-01', '2023-09-30');
+
+INSERT INTO employee_projects (employee_id, project_id, hours_logged) VALUES
+(2, 1, 120.5), -- Bob on Build New API
+(6, 1, 180.0), -- Frank on Build New API
+(2, 2, 45.75), -- Bob also on Website Redesign
+(4, 3, 110.00), -- David on Q3 Sales Campaign
+(5, 2, 95.50); -- Eva on Website Redesign
 
 
 
